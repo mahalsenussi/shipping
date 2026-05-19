@@ -1,0 +1,394 @@
+<style>
+#naval-fields {
+    display: none;
+}
+</style>
+
+    <a href="?page=shipments&action=index" class="btn btn-secondary">العودة للقائمة</a>
+</div>
+
+<?php
+// Restore form data if available
+$formData = $_SESSION['form_data'] ?? [];
+unset($_SESSION['form_data']);
+?>
+
+<form method="POST" action="?page=shipments&action=store">
+    <div class="card">
+        <div class="card-body row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">نوع الشحن *</label>
+                <select name="shipping_type" class="form-select" required onchange="toggleShippingFields(this.value)">
+                    <option value="">-- اختر نوع الشحن --</option>
+                    <option value="naval" <?php echo ($formData['shipping_type'] ?? '') === 'naval' ? 'selected' : ''; ?>>بحري</option>
+                    <option value="air" <?php echo ($formData['shipping_type'] ?? '') === 'air' ? 'selected' : ''; ?>>جوي</option>
+                    <option value="land" <?php echo ($formData['shipping_type'] ?? '') === 'land' ? 'selected' : ''; ?>>بري</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">رقم المرجع *</label>
+                <input type="text" name="reference_number" class="form-control" required value="<?php echo htmlspecialchars($formData['reference_number'] ?? ''); ?>">
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">العميل</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddNew('customer')">
+                        <i class="fas fa-plus"></i> إضافة جديد
+                    </button>
+                </div>
+                <select name="customer_id" class="form-select">
+                    <option value="">-- اختر العميل --</option>
+                    <?php foreach ($customers as $c): ?>
+                        <option value="<?php echo $c['id']; ?>" <?php echo ($formData['customer_id'] ?? '') == $c['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($c['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6" id="naval-fields">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">خط الشحن</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddNew('shipping_line')">
+                        <i class="fas fa-plus"></i> إضافة جديد
+                    </button>
+                </div>
+                <select name="shipping_line_id" class="form-select">
+                    <option value="">-- اختر --</option>
+                    <?php foreach ($shipping_lines as $sl): ?>
+                        <option value="<?php echo $sl['id']; ?>" <?php echo ($formData['shipping_line_id'] ?? '') == $sl['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($sl['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6" id="naval-fields">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">الوكيل المحلي</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddNew('local_agent')">
+                        <i class="fas fa-plus"></i> إضافة جديد
+                    </button>
+                </div>
+                <select name="local_agent_id" class="form-select">
+                    <option value="">-- اختر --</option>
+                    <?php foreach ($agents as $a): ?>
+                        <option value="<?php echo $a['id']; ?>" <?php echo ($formData['local_agent_id'] ?? '') == $a['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($a['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">ميناء الشحن</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddNew('port')">
+                        <i class="fas fa-plus"></i> إضافة جديد
+                    </button>
+                </div>
+                <select name="origin_port_id" class="form-select">
+                    <option value="">-- اختر --</option>
+                    <?php foreach ($ports as $p): ?>
+                        <option value="<?php echo $p['id']; ?>" <?php echo ($formData['origin_port_id'] ?? '') == $p['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($p['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">ميناء الوصول</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddNew('port')">
+                        <i class="fas fa-plus"></i> إضافة جديد
+                    </button>
+                </div>
+                <select name="destination_port_id" class="form-select">
+                    <option value="">-- اختر --</option>
+                    <?php foreach ($ports as $p): ?>
+                        <option value="<?php echo $p['id']; ?>" <?php echo ($formData['destination_port_id'] ?? '') == $p['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($p['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6" id="naval-fields">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">السفينة</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddNew('vessel')">
+                        <i class="fas fa-plus"></i> إضافة جديد
+                    </button>
+                </div>
+                <select name="vessel_id" class="form-select">
+                    <option value="">-- اختر --</option>
+                    <?php foreach ($vessels as $v): ?>
+                        <option value="<?php echo $v['id']; ?>" <?php echo ($formData['vessel_id'] ?? '') == $v['id'] ? 'selected' : ''; ?>>
+                            <?php 
+                            echo htmlspecialchars($v['name']);
+                            if (!empty($v['shipping_line_name'])) {
+                                echo ' (' . htmlspecialchars($v['shipping_line_name']) . ')';
+                            }
+                            ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-md-6" id="naval-fields">
+                <label class="form-label">رقم الرحلة</label>
+                <input type="text" name="voyage_number" class="form-control" value="<?php echo htmlspecialchars($formData['voyage_number'] ?? ''); ?>">
+            </div>
+
+            <div class="col-md-6" id="naval-fields">
+                <label class="form-label">تاريخ المغادرة المتوقع</label>
+                <input type="date" name="estimated_departure_date" class="form-control" value="<?php echo htmlspecialchars($formData['estimated_departure_date'] ?? ''); ?>">
+            </div>
+
+            <div class="col-md-6" id="naval-fields">
+                <label class="form-label">تاريخ الوصول المتوقع</label>
+                <input type="date" name="estimated_arrival_date" class="form-control" value="<?php echo htmlspecialchars($formData['estimated_arrival_date'] ?? ''); ?>">
+            </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <a href="#" class="btn btn-outline-secondary me-2" onclick="return false;" title="هذه الميزة قيد التطوير">
+    إضافة بيانات
+</a>
+
+            <button type="submit" class="btn btn-primary">حفظ</button>
+
+        </div>
+    </div>
+<?php
+// Container types are already loaded by the controller and available as $containerTypes
+?>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">الحاويات</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addContainerRow()">
+            <i class="fas fa-plus"></i> إضافة حاوية
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="containersTable">
+                <thead>
+                    <tr>
+                        <th>رقم الحاوية</th>
+                        <th>النوع</th>
+                        <th>رقم الختم</th>
+                        <th>الوزن (كجم)</th>
+                        <th>الحجم (CBM)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer text-muted">أضف الحاويات الخاصة بالشحنة (اختياري)</div>
+    
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">البضائع</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCargoRow()">
+            <i class="fas fa-plus"></i> إضافة بضاعة
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="cargoTable">
+                <thead>
+                    <tr>
+                        <th>الوصف</th>
+                        <th>HS Code</th>
+                        <th>الكمية</th>
+                        <th>وحدة</th>
+                        <th>الوزن (كجم)</th>
+                        <th>الحجم (CBM)</th>
+                        <th>رقم الحاوية (اختياري)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer text-muted">أضف بضائع هذه الشحنة (اختياري)</div>
+</div>
+
+<script>
+// Toggle shipping fields based on shipping type
+function toggleShippingFields(shippingType) {
+    const navalFields = document.querySelectorAll('#naval-fields');
+    if (shippingType === 'naval') {
+        navalFields.forEach(field => field.style.display = 'block');
+    } else {
+        navalFields.forEach(field => field.style.display = 'none');
+    }
+}
+
+// Initialize form on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const shippingTypeSelect = document.querySelector('select[name="shipping_type"]');
+    if (shippingTypeSelect && shippingTypeSelect.value) {
+        toggleShippingFields(shippingTypeSelect.value);
+    }
+});
+</script>
+
+let containerIndex = 0;
+function addContainerRow() {
+    const tbody = document.querySelector('#containersTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" name="containers[${containerIndex}][container_number]" class="form-control" placeholder="مثال: ABCD1234567" required></td>
+        <td>
+            <select name="containers[${containerIndex}][container_type_id]" class="form-select" required>
+                <option value="">-- اختر النوع --</option>
+                ${containerTypesOptions()}
+            </select>
+        </td>
+        <td><input type="text" name="containers[${containerIndex}][seal_number]" class="form-control" placeholder="رقم الختم"></td>
+        <td><input type="number" step="0.01" name="containers[${containerIndex}][weight_kg]" class="form-control" placeholder="0.00"></td>
+        <td><input type="number" step="0.001" name="containers[${containerIndex}][volume_cbm]" class="form-control" placeholder="0.000"></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    containerIndex++;
+}
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+function containerTypesOptions() {
+    const types = <?php echo json_encode($containerTypes); ?>;
+    return types.map(t => `<option value="${t.id}">${escapeHtml(t.code)}${t.description ? ' - ' + escapeHtml(t.description) : ''}</option>`).join('');
+}
+function addCargoRow() {
+    const tbody = document.querySelector('#cargoTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" name="cargo_items[${cargoIndex}][description]" class="form-control" required placeholder="وصف البضاعة"></td>
+        <td><input type="text" name="cargo_items[${cargoIndex}][hs_code]" class="form-control" placeholder="HS Code"></td>
+        <td style="max-width:110px"><input type="number" min="1" step="1" name="cargo_items[${cargoIndex}][quantity]" class="form-control" value="1" required placeholder="الكمية"></td>
+        <td style="max-width:140px">
+            <select name="cargo_items[${cargoIndex}][unit_type]" class="form-select">
+                <option value="PCS">قطعة</option>
+                <option value="CTN">كرتونة</option>
+                <option value="PKG">طرد</option>
+            </select>
+        </td>
+        <td><input type="number" step="0.01" name="cargo_items[${cargoIndex}][weight_kg]" class="form-control" placeholder="الوزن (كجم)"></td>
+        <td><input type="number" step="0.001" name="cargo_items[${cargoIndex}][volume_cbm]" class="form-control" placeholder="الحجم (CBM)"></td>
+        <td><input type="text" name="cargo_items[${cargoIndex}][container_number_ref]" class="form-control" placeholder="رقم الحاوية إن وجد"></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    cargoIndex++;
+}
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+</script>
+
+</form>
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة عميل جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm" class="needs-validation" novalidate onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label">اسم العميل *</label>
+                        <input type="text" class="form-control" id="customerName" required>
+                        <div class="invalid-feedback">يرجى إدخال اسم العميل</div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Shipping Line Modal -->
+<div class="modal fade" id="addShippingLineModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة خط شحن جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addShippingLineForm" class="needs-validation" novalidate onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="shippingLineName" class="form-label">اسم خط الشحن *</label>
+                        <input type="text" class="form-control" id="shippingLineName" required>
+                        <div class="invalid-feedback">يرجى إدخال اسم خط الشحن</div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Agent Modal -->
+<div class="modal fade" id="addAgentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة وكيل جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAgentForm" class="needs-validation" novalidate onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="agentName" class="form-label">اسم الوكيل *</label>
+                        <input type="text" class="form-control" id="agentName" required>
+                        <div class="invalid-feedback">يرجى إدخال اسم الوكيل</div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add Vessel Modal -->
+<div class="modal fade" id="addVesselModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة سفينة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addVesselForm" class="needs-validation" novalidate onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="vesselName" class="form-label">اسم السفينة *</label>
+                        <input type="text" class="form-control" id="vesselName" required>
+                        <div class="invalid-feedback">يرجى إدخال اسم السفينة</div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
